@@ -134,7 +134,12 @@ def navigator():
 
 def send_ftp(server_add, username, password, filepath):
     logger = logging.getLogger('SendFileCore')
-    logger.info('Starting FTP connection')
+    if 'http' in server_add:
+        logger.debug('Http substring found in address. Correcting')
+        server_add = server_add.replace('http://', '').replace('https://', '').strip()
+        if server_add[-1] == '/':
+            server_add = server_add[:-1]
+    logger.info(f'Starting FTP connection to {server_add}')
     with FTP(server_add, username, password) as ftp:
         ftp.encoding = 'utf-8'
         if ftp_directory not in ftp.nlst():
@@ -217,7 +222,6 @@ download_dir = f'dump/{file_timestamp}'
 check_create_dir('dump')
 check_create_dir(download_dir)
 scrape_success = True
-ft_success = True
 now = datetime.now()
 error_log = ''
 if virtual_display:
@@ -242,16 +246,15 @@ else:
 later = datetime.now()
 if scrape_success:
     download_file = os.getcwd() + '/' + download_dir + f'/{os.listdir(download_dir)[0]}'
-    try:
-        send_ftp(ftp_add, ftp_user, ftp_pass, download_file)
-    except Exception as exc:
-        rootLogger.error('Could not send file over FTP')
-        rootLogger.error(f'Details: {str(exc)}')
-        ft_success = False
-        error_log = f'Could not send file over FTP: {str(exc)}'
-if not scrape_success or not ft_success:
-    send_pushbullet(error_log)
-else:
+    for f_add_ele, f_user_ele, f_pass_ele in zip(ftp_add.split(','), ftp_user.split(','), ftp_pass.split(',')):
+        try:
+            send_ftp(f_add_ele, f_user_ele, f_pass_ele, download_file)
+        except Exception as exc:
+            rootLogger.error('Could not send file over FTP')
+            rootLogger.error(f'Details: {str(exc)}')
+            send_pushbullet(f'Could not send file over FTP for address {f_add_ele}: {str(exc)}')
     total_time = (later - now).seconds
     send_pushbullet(f'Scraping process successfully completed. Total time taken: {total_time} second(s)')
+else:
+    send_pushbullet(error_log)
 rootLogger.info('Goodbye')
