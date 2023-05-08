@@ -22,8 +22,8 @@ debug_mode = False
 ftp_add = 'ftp_add'
 ftp_user = 'ftp_user'
 ftp_pass = 'ftp_pass'
-ftp_directory = 'Bundesanzeiger_downloads'
 version_number = '112'
+down_wait = 10
 
 
 def check_create_dir(dirname):
@@ -142,10 +142,7 @@ def send_ftp(server_add, username, password, filepath):
     logger.info(f'Starting FTP connection to {server_add}')
     with FTP(server_add, username, password) as ftp:
         ftp.encoding = 'utf-8'
-        if ftp_directory not in ftp.nlst():
-            logger.debug('Creating directory')
-            ftp.mkd(ftp_directory)
-        upload_dir = ftp_directory + '/' + filepath.split('/')[-1]
+        upload_dir = filepath.split('/')[-1]
         with open(filepath, 'rb') as f:
             logger.info('Uploading file')
             ftp.storbinary('STOR ' + upload_dir, f)
@@ -199,9 +196,9 @@ try:
     ftp_add = config.get('ftp', 'address')
     ftp_user = config.get('ftp', 'username')
     ftp_pass = config.get('ftp', 'password')
-    ftp_directory = config.get('ftp', 'directory_name')
     push_access_token = config.get('pushbullet', 'push_access_token')
     debug_mode = config.getboolean('misc', 'debug_mode')
+    down_wait = int(config['misc']['wait_for_download'])
 except Exception as exc:
     rootLogger.error('Cannot read conf')
     rootLogger.error(f'Details: {str(exc)}')
@@ -215,6 +212,7 @@ rootLogger.debug(f'ftp_add: {ftp_add}')
 rootLogger.debug(f'ftp_user: {ftp_user}')
 rootLogger.debug(f'ftp_pass: {ftp_pass}')
 rootLogger.debug(f'push_acess_token: {push_access_token}')
+rootLogger.debug(f'Download wait: {down_wait}')
 rootLogger.debug(f'debug_mode: {debug_mode}')
 
 file_timestamp = log_timestamp.strftime('%d-%m-%y-%H-%M-%S')
@@ -245,6 +243,7 @@ else:
         error_log = f'Cannot navigate website: {str(exc)}'
 later = datetime.now()
 if scrape_success:
+    time.sleep(down_wait)
     download_file = os.getcwd() + '/' + download_dir + f'/{os.listdir(download_dir)[0]}'
     for f_add_ele, f_user_ele, f_pass_ele in zip(ftp_add.split(','), ftp_user.split(','), ftp_pass.split(',')):
         try:
