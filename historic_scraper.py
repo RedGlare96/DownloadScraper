@@ -24,6 +24,7 @@ ftp_user = 'ftp_user'
 ftp_pass = 'ftp_pass'
 version_number = '112'
 down_wait = 10
+ftp_directory = 'Bundesanzeiger_downloads'
 
 
 def check_create_dir(dirname):
@@ -142,7 +143,14 @@ def send_ftp(server_add, username, password, filepath):
     logger.info(f'Starting FTP connection to {server_add}')
     with FTP(server_add, username, password) as ftp:
         ftp.encoding = 'utf-8'
-        upload_dir = filepath.split('/')[-1]
+        try:
+            if ftp_directory not in ftp.nlst():
+                logger.debug('Creating directory')
+                ftp.mkd(ftp_directory)
+        except Exception as exc:
+            logger.debug('Could not create directory')
+            logger.debug(f'Details: {str(exc)}')
+        upload_dir = ftp_directory + '/' + filepath.split('/')[-1]
         with open(filepath, 'rb') as f:
             logger.info('Uploading file')
             ftp.storbinary('STOR ' + upload_dir, f)
@@ -196,6 +204,7 @@ try:
     ftp_add = config.get('ftp', 'address')
     ftp_user = config.get('ftp', 'username')
     ftp_pass = config.get('ftp', 'password')
+    ftp_directory = config.get('ftp', 'directory_name')
     push_access_token = config.get('pushbullet', 'push_access_token')
     debug_mode = config.getboolean('misc', 'debug_mode')
     down_wait = int(config['misc']['wait_for_download'])
