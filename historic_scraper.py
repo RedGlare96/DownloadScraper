@@ -188,6 +188,12 @@ fileHandler.setFormatter(logging.Formatter('%(asctime)s:-[%(name)s] - %(levelnam
 rootLogger.addHandler(consoleHandler)
 rootLogger.addHandler(fileHandler)
 rootLogger.setLevel(logging.DEBUG)
+logging.getLogger('seleniumwire.handler').setLevel(logging.ERROR)
+logging.getLogger('selenium.webdriver.remote.remote_connection').setLevel(logging.ERROR)
+logging.getLogger('seleniumwire.server').setLevel(logging.ERROR)
+logging.getLogger('hpack.hpack').setLevel(logging.ERROR)
+logging.getLogger('hpack.table').setLevel(logging.ERROR)
+logging.getLogger('seleniumwire.storage').setLevel(logging.ERROR)
 if debug_mode:
     consoleHandler.setLevel(logging.DEBUG)
 else:
@@ -234,15 +240,19 @@ now = datetime.now()
 error_log = ''
 if virtual_display:
     rootLogger.info('Starting virtual display')
-    with Display(visible=False, size=(1920, 1080)) as disp:
-        try:
-            navigator()
-        except Exception as exc:
-            rootLogger.error('Cannot navigate website')
-            rootLogger.error(f'Details: {str(exc)}')
-            scrape_success = False
-            error_log = f'Cannot navigate website: {str(exc)}'
-        rootLogger.info('Stopping virtual display')
+    try:
+        with Display(visible=False, size=(1920, 1080)) as disp:
+            try:
+                navigator()
+            except Exception as exc:
+                rootLogger.error('Cannot navigate website')
+                rootLogger.error(f'Details: {str(exc)}')
+                scrape_success = False
+                error_log = f'Cannot navigate website: {str(exc)}'
+            rootLogger.info('Stopping virtual display')
+    except Exception as exc:
+        rootLogger.error('Error with virtual display')
+        rootLogger.error(f'Details: {str(exc)}')
 else:
     try:
         navigator()
