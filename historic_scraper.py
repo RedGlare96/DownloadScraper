@@ -12,6 +12,7 @@ from sys import stdout
 from pyvirtualdisplay import Display
 from ftplib import FTP
 from requests import post
+import traceback
 
 url = 'https://www.bundesanzeiger.de/pub/en/nlp_history?0'
 cookie_file = 'cookie1'
@@ -74,6 +75,9 @@ def navigator():
     options.add_argument('--window-size={}'.format('1920,1080'))
     options.add_argument('--disk-cache-size=1073741824')
     options.add_argument('--no-sandbox')
+    options.add_argument("--disable-setuid-sandbox")
+    options.add_argument("--disable-extensions")
+    options.add_argument('--disable-application-cache')
     options.add_argument('--disable-gpu')
     options.add_argument('--dns-prefetch-disable')
     options.add_argument('--hide-scrollbars')
@@ -247,6 +251,7 @@ if virtual_display:
             except Exception as exc:
                 rootLogger.error('Cannot navigate website')
                 rootLogger.error(f'Details: {str(exc)}')
+                rootLogger.debug(f'Traceback: {traceback.format_exc()}')
                 scrape_success = False
                 error_log = f'Cannot navigate website: {str(exc)}'
             rootLogger.info('Stopping virtual display')
@@ -259,6 +264,7 @@ else:
     except Exception as exc:
         rootLogger.error('Cannot navigate website')
         rootLogger.error(f'Details: {str(exc)}')
+        rootLogger.debug(f'Traceback: {traceback.format_exc()}')
         scrape_success = False
         error_log = f'Cannot navigate website: {str(exc)}'
 later = datetime.now()
