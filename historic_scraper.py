@@ -62,7 +62,7 @@ def xpath_soup(element):
     return '/%s' % '/'.join(components)
 
 
-def navigator():
+def navigator(headless=False):
     logger = logging.getLogger('Navigator')
     logger.info('Initiating driver')
     options = uc.ChromeOptions()
@@ -84,11 +84,11 @@ def navigator():
     options.add_argument("--disable-infobars")
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-browser-side-navigation')
-    options.add_argument('--log-level=0')
-    options.add_argument('--ignore-certificate-errors')
-    options.add_argument("--disable-plugins-discovery")
-    options.add_argument("--start-maximized")
-    driver = uc.Chrome(headless=False, options=options, version_main=version_number, user_data_dir=cookie_file)
+    # options.add_argument('--log-level=0')
+    # options.add_argument('--ignore-certificate-errors')
+    # options.add_argument("--disable-plugins-discovery")
+    # options.add_argument("--start-maximized")
+    driver = uc.Chrome(headless=headless, options=options, version_main=version_number, user_data_dir=cookie_file)
     logger.debug('Setting up stealth')
     stealth(driver,
             languages=["en-US", "en"],
@@ -219,6 +219,7 @@ try:
     push_access_token = config.get('pushbullet', 'push_access_token')
     debug_mode = config.getboolean('misc', 'debug_mode')
     down_wait = int(config['misc']['wait_for_download'])
+    headless = config.getboolean('browser', 'headless')
 except Exception as exc:
     rootLogger.error('Cannot read conf')
     rootLogger.error(f'Details: {str(exc)}')
@@ -247,7 +248,7 @@ if virtual_display:
     try:
         with Display(visible=False, size=(1920, 1080)) as disp:
             try:
-                navigator()
+                navigator(headless)
             except Exception as exc:
                 rootLogger.error('Cannot navigate website')
                 rootLogger.error(f'Details: {str(exc)}')
@@ -260,7 +261,7 @@ if virtual_display:
         rootLogger.error(f'Details: {str(exc)}')
 else:
     try:
-        navigator()
+        navigator(headless)
     except Exception as exc:
         rootLogger.error('Cannot navigate website')
         rootLogger.error(f'Details: {str(exc)}')
