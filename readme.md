@@ -22,12 +22,15 @@ Manual configuration is REQUIRED. Use the file masterconfig.ini to add configura
 11. Save file
 12. Run script with the command "python historic_scraper.py"
 
+## How to access logs
+Each time the script runs, the script creates a log file under the 'logs' directory in the same root directory as the script file. The file name has a timestamp that denotes when it was initiated.
+
 ## Setting up cron jobs
-The virtual environment can be activated automatically by using the python executable in the venv directory. Eg: "/path/to/cloned/direcotry/venv_name/python historic_scraper.py"
-Using the python executable in the venv direcotry will automatically activate the virtual environemnt when the cron job is triggered
+The virtual environment can be activated automatically by using the python executable in the venv directory. Eg: "/path/to/cloned/directory/venv_name/python historic_scraper.py"
+Using the python executable in the venv directory will automatically activate the virtual environemnt when the cron job is triggered
 
 ## Tracking updates
-1. Cd into cloned direcotry
+1. Cd into cloned directory
 2. Use the command "git pull origin master"
 
 This command will automatically update the files in the cloned direcotry to the new version tracked in Git
