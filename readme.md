@@ -29,5 +29,6 @@ Using the python executable in the venv direcotry will automatically activate th
 ## Tracking updates
 1. Cd into cloned direcotry
 2. Use the command "git pull origin master"
+
 This command will automatically update the files in the cloned direcotry to the new version tracked in Git
 
