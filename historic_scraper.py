@@ -14,7 +14,7 @@ from ftplib import FTP
 from requests import post
 import traceback
 
-url = 'https://www.bundesanzeiger.de/pub/en/nlp_history?0'
+url = ''
 cookie_file = 'cookie1'
 from_input = '0,00'
 push_access_token = 'pushtoken'
@@ -212,6 +212,7 @@ try:
     config.read('masterconfig.ini')
     version_number = config.get('browser', 'version')
     virtual_display = config.getboolean('browser', 'virtual_display')
+    url = config['browser']['url']
     ftp_add = config.get('ftp', 'address')
     ftp_user = config.get('ftp', 'username')
     ftp_pass = config.get('ftp', 'password')
@@ -227,6 +228,7 @@ except Exception as exc:
     exit(999)
 
 # Reporting config values
+rootLogger.debug(f'Url: {url}')
 rootLogger.debug(f'version_number: {version_number}')
 rootLogger.debug(f'virtual_display: {virtual_display}')
 rootLogger.debug(f'ftp_add: {ftp_add}')
