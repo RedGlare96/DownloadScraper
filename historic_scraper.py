@@ -13,6 +13,10 @@ from pyvirtualdisplay import Display
 from ftplib import FTP
 from requests import post
 import traceback
+import platform
+import subprocess
+from urllib.error import HTTPError
+from selenium.common.exceptions import WebDriverException
 
 url = ''
 cookie_file = 'cookie1'
@@ -180,6 +184,10 @@ def send_pushbullet(push_message):
         logger.error(f'Api response: {response.json()}')
 
 
+def get_chromium_version():
+    return subprocess.check_output(['chromium', '--version']).decode('utf-8').split()[1].split('.')[0].strip()
+
+
 # init logging
 rootLogger = logging.getLogger()
 consoleHandler = logging.StreamHandler(stdout)
@@ -210,7 +218,7 @@ rootLogger.info('Getting conf')
 try:
     config = ConfigParser()
     config.read('masterconfig.ini')
-    version_number = config.get('browser', 'version')
+    version_number = int(config.get('browser', 'version'))
     virtual_display = config.getboolean('browser', 'virtual_display')
     url = config['browser']['url']
     ftp_add = config.get('ftp', 'address')
@@ -226,6 +234,11 @@ except Exception as exc:
     rootLogger.error(f'Details: {str(exc)}')
     rootLogger.info('Closing process')
     exit(999)
+
+
+if platform.system() == 'Linux':
+    version_number = int(get_chromium_version())
+    rootLogger.info(f'Linux environment detected. Version number changed to: {version_number}')
 
 # Reporting config values
 rootLogger.debug(f'Url: {url}')
@@ -262,14 +275,36 @@ if virtual_display:
         rootLogger.error('Error with virtual display')
         rootLogger.error(f'Details: {str(exc)}')
 else:
-    try:
-        navigator(headless)
-    except Exception as exc:
-        rootLogger.error('Cannot navigate website')
-        rootLogger.error(f'Details: {str(exc)}')
-        rootLogger.debug(f'Traceback: {traceback.format_exc()}')
-        scrape_success = False
-        error_log = f'Cannot navigate website: {str(exc)}'
+    retry = True
+    version_degrade_limit = 2
+    tries = 0
+    while retry:
+        tries += 1
+        try:
+            navigator(headless)
+        except HTTPError as exc:
+            rootLogger.error('404 error found')
+            rootLogger.error(f'Details: {str(exc)}')
+            if tries > version_degrade_limit:
+                error_log = f'Version degrade tries exhausted: {str(exc)}'
+                break
+            version_number -= 1
+            rootLogger.debug(f'Version number changed to: {version_number}')
+        except WebDriverException as exc:
+            rootLogger.error('Driver exception found')
+            rootLogger.error(f'Details: {str(exc)}')
+            if tries > version_degrade_limit:
+                error_log = f'Version degrade tries exhausted: {str(exc)}'
+                break
+            version_number -= 1
+            rootLogger.debug(f'Version number changed to: {version_number}')
+        except Exception as exc:
+            rootLogger.error('Cannot navigate website')
+            rootLogger.error(f'Details: {str(exc)}')
+            rootLogger.debug(f'Traceback: {traceback.format_exc()}')
+            scrape_success = False
+            error_log = f'Cannot navigate website: {str(exc)}'
+            retry = False
 later = datetime.now()
 if scrape_success:
     time.sleep(down_wait)
