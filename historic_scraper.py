@@ -282,6 +282,7 @@ else:
         tries += 1
         try:
             navigator(headless)
+            retry = False
         except HTTPError as exc:
             rootLogger.error('404 error found')
             rootLogger.error(f'Details: {str(exc)}')
